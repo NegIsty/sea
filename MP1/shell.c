@@ -7,10 +7,12 @@ static void search(char *chaine);
 
 int main() {
 	char commande[200];
-	char *ligne, *token, *fin;
+	char path[200];
+	char *ligne, *token, *fin, *tmp;
 	
 	while(1) {
-		printf("%% ");
+		getcwd(path, sizeof(path));
+		printf("%s %% ", path);
 		
 		if(fgets(commande, sizeof(commande), stdin)==NULL) {
 			printf("\n");
@@ -20,9 +22,24 @@ int main() {
 			ligne=strdup(commande);
 			fin=ligne;
 			
-			while(token=strsep(&fin, " ")) {
-				printf("%s\n", token);
+			token=strsep(&fin, " ");
+			
+			/*Commande saisie : exit*/
+			if(!strcmp(token, "exit")) {
+				return 0;
+			} 
+			
+			/*Commande saisie : cd*/
+			else if(!strcmp(token, "cd")) {
+				token=strsep(&fin, " ");
+				
+				tmp=strcat(strcat(path, "/"), token);
+				chdir(tmp);
 			}
+			
+//			while(token=strsep(&fin, " ")) {
+//				printf("%s\n", token);
+//			}
 			
 			free(ligne);
 		}
