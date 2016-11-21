@@ -8,33 +8,60 @@ static void search(char *chaine);
 int main() {
 	char commande[200];
 	char path[200];
-	char *ligne, *token, *fin, *tmp;
+	char *ligne, *fin, *tmp;
+	char *token[20];
+	int fils, i;
 	
 	while(1) {
 		getcwd(path, sizeof(path));
 		printf("%s %% ", path);
 		
+//		test[0]="ls";
+//		test[1]="-a";
+//		test[2]=NULL;
+//		if((fils=fork())==0) {
+//			execvp("ls", test);	
+//		}
+//		waitpid(fils);
+		
 		if(fgets(commande, sizeof(commande), stdin)==NULL) {
 			printf("\n");
 			return 0;
-		} else {
+		} 
+		
+		else {
 			search(commande);
 			ligne=strdup(commande);
 			fin=ligne;
 			
-			token=strsep(&fin, " ");
+			token[0]=strsep(&fin, " ");
 			
 			/*Commande saisie : exit*/
-			if(!strcmp(token, "exit")) {
+			if(!strcmp(token[0], "exit")) {
 				return 0;
 			} 
 			
 			/*Commande saisie : cd*/
-			else if(!strcmp(token, "cd")) {
-				token=strsep(&fin, " ");
+			else if(!strcmp(token[0], "cd")) {
+				token[1]=strsep(&fin, " ");
 				
-				tmp=strcat(strcat(path, "/"), token);
+				tmp=strcat(strcat(path, "/"), token[1]);
 				chdir(tmp);
+			}
+			
+			/*Autre commande*/
+			else {
+				i=1;
+				
+				while(tmp=strsep(&fin, " ")) {
+					token[i++]=tmp;
+				}
+				token[i]=NULL;
+				
+				if((fils=fork())==0) {
+					execvp(token[0], token);	
+				}
+				wait();
 			}
 			
 //			while(token=strsep(&fin, " ")) {
