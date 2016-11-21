@@ -13,19 +13,23 @@ int main() {
 	int fils, status, i;
 	
 	while(1) {
+		/*Affiche le répertoire courant*/
 		getcwd(path, sizeof(path));
 		printf("%s %% ", path);
 		
+		/*Quitte le programme si ctrl+D*/
 		if(fgets(commande, sizeof(commande), stdin)==NULL) {
 			printf("\n");
 			return 0;
 		} 
 		
+		/*Gère les commandes saisies par l'utilisateur*/
 		else {
 			search(commande);
 			ligne=strdup(commande);
 			fin=ligne;
 			
+			/*Récupère le premier token de la commande*/
 			token[0]=strsep(&fin, " ");
 			
 			/*Commande saisie : exit*/
@@ -45,11 +49,13 @@ int main() {
 			else {
 				i=1;
 				
+				/*Sépare le reste de la commande en tokens*/
 				while(tmp=strsep(&fin, " ")) {
 					token[i++]=tmp;
 				}
 				token[i]=NULL;
 				
+				/*Crée un fils qui exécute la commande*/
 				if((fils=fork())==0) {
 					execvp(token[0], token);	
 				}
