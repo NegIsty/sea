@@ -10,19 +10,11 @@ int main() {
 	char path[200];
 	char *ligne, *fin, *tmp;
 	char *token[20];
-	int fils, i;
+	int fils, status, i;
 	
 	while(1) {
 		getcwd(path, sizeof(path));
 		printf("%s %% ", path);
-		
-//		test[0]="ls";
-//		test[1]="-a";
-//		test[2]=NULL;
-//		if((fils=fork())==0) {
-//			execvp("ls", test);	
-//		}
-//		waitpid(fils);
 		
 		if(fgets(commande, sizeof(commande), stdin)==NULL) {
 			printf("\n");
@@ -61,12 +53,8 @@ int main() {
 				if((fils=fork())==0) {
 					execvp(token[0], token);	
 				}
-				wait();
+				waitpid(fils, &status, WUNTRACED | WCONTINUED);
 			}
-			
-//			while(token=strsep(&fin, " ")) {
-//				printf("%s\n", token);
-//			}
 			
 			free(ligne);
 		}
