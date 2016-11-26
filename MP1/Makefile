@@ -1,4 +1,4 @@
-all: shell
-
-shell: shell.c
-	gcc -o shell shell.c
+all: monShell
+	
+monShell: monShell.c
+	gcc -o monShell monShell.c
