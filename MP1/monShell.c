@@ -9,6 +9,7 @@
 void afficheInvite();
 void saisieCommande(char*);
 void corrigeCommande(char*);
+void traitement(char*);
 
 int main() {
 	char commande[4096];
@@ -16,8 +17,7 @@ int main() {
 	while(1) {
 		afficheInvite();
 		saisieCommande(commande);
-		
-		printf("%s\n", commande);
+		traitement(commande);
 	}
 	
 	return 0;
@@ -73,6 +73,23 @@ void corrigeCommande(char* commande) {
 		i++;
 	}
 	
-	/*Supprime le saut de ligne final*/
-	commande[i]=commande[i+1];
+	/*Supprime le saut de ligne et l'éventuel espace final*/
+	if(commande[i-1]==' ')
+		commande[i-1]=commande[i+1];
+	else
+		commande[i]=commande[i+1];
+}
+
+/*Gère le traitement de la commande saisie*/
+void traitement(char* commande) {
+	char *ligne, *fin, *token;
+	
+	ligne=strdup(commande);
+	fin=ligne;
+	
+	while(token=strsep(&fin, " ")) {
+		printf("%s\n", token);
+	}
+	
+	free(ligne);
 }
