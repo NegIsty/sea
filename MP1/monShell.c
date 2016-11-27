@@ -6,6 +6,8 @@
 
 #define MAXCOMMANDE 4096
 
+char path[4096];
+
 void afficheInvite();
 void saisieCommande(char*);
 void corrigeCommande(char*);
@@ -25,7 +27,8 @@ int main() {
 
 /*Affiche l'invite de commande*/
 void afficheInvite() {
-	printf("%% ");
+	getcwd(path, sizeof(path));
+	printf("%s %% ", path);
 }
 
 /*Gère la saisie de la commande utilisateur*/
@@ -82,13 +85,33 @@ void corrigeCommande(char* commande) {
 
 /*Gère le traitement de la commande saisie*/
 void traitement(char* commande) {
-	char *ligne, *fin, *token;
+	char *ligne, *fin, *tmp;
+	char *token[256];
+	int i=0;
 	
 	ligne=strdup(commande);
 	fin=ligne;
 	
-	while(token=strsep(&fin, " ")) {
-		printf("%s\n", token);
+	/*Division en tokens de la commande*/
+	while(token[i++]=strsep(&fin, " "));
+	
+	/*Commande saisie : exit*/
+	if(!strcmp(token[0], "exit")) {
+		exit(0);
+	}
+	
+	/*Commande saisie : cd*/
+	else if(!strcmp(token[0], "cd")) {
+		tmp=strcat(strcat(path, "/"), token[1]);
+		chdir(tmp);
+	}
+	
+	/*Autre commande*/
+	else {
+		i=0;
+		
+		while(token[i])
+			printf("%s\n", token[i++]);
 	}
 	
 	free(ligne);
