@@ -12,6 +12,7 @@ void afficheInvite();
 void saisieCommande(char*);
 void corrigeCommande(char*);
 void traitement(char*);
+void executeCommande(char**);
 
 int main() {
 	char commande[4096];
@@ -108,11 +109,19 @@ void traitement(char* commande) {
 	
 	/*Autre commande*/
 	else {
-		i=0;
-		
-		while(token[i])
-			printf("%s\n", token[i++]);
+		executeCommande(token);
 	}
 	
 	free(ligne);
+}
+
+void executeCommande(char** token) {
+	int fils;
+	
+	/*Crée un fils qui exécute la commande*/
+	if((fils=fork())==0)
+		execvp(token[0], token);	
+	else if(fils==-1)
+		perror("fork");
+	waitpid(fils, NULL, 0);
 }
