@@ -13,6 +13,7 @@ void saisieCommande(char*);
 void corrigeCommande(char*);
 void traitement(char*);
 void executeCommande(char**);
+void diviseCommande(char**, int, char**);
 
 int main() {
 	char commande[4096];
@@ -115,13 +116,81 @@ void traitement(char* commande) {
 	free(ligne);
 }
 
+/*Gère l'exécution des commandes autres que exit et cd*/
 void executeCommande(char** token) {
-	int fils;
+	int fils, i;
+	int stdOut=dup(1), stdIn=dup(0);
+	char *commande[256];
+	
+	i=0;
+	
+	diviseCommande(token, i, commande);
 	
 	/*Crée un fils qui exécute la commande*/
-	if((fils=fork())==0)
-		execvp(token[0], token);	
-	else if(fils==-1)
+	if((fils=fork())==0) {
+		execvp(commande[0], commande);
+		perror(commande[0]);
+		exit(1);
+	} else if(fils==-1)
 		perror("fork");
 	waitpid(fils, NULL, 0);
+	
+	dup2(stdIn, 0);
+	dup2(stdOut, 1);
+}
+
+/*Sépare la commande à donner à execvp et établit les redirections*/
+void diviseCommande(char** token, int i, char** commande) {
+	int direction, fd0, fd1, j;
+	
+	direction=0;
+	j=0;
+	
+	while(token[i]) {
+		/*Gère les redirections*/
+		if(!(strcmp(token[i], "<"))) {
+			direction=1;
+			
+			if(token[++i]) {
+				if((fd0=open(token[i], O_RDONLY))!=0) {
+					dup2(fd0, 0);
+					close(fd0);
+				} else if(fd0<0) {
+					perror(token[i]);
+					exit(1);
+				}
+			}
+		} else if(!(strcmp(token[i], ">"))) {
+			direction=1;
+			
+			if(token[++i]) {
+				if((fd1=open(token[i], O_CREAT | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH))!=0) {
+					dup2(fd1, 1);
+					close(fd1);
+				} else if(fd1<0) {
+					perror(token[i]);
+					exit(1);
+				}
+			}
+		} else if(!(strcmp(token[i], "2>"))) {
+			direction=1;
+			
+			if(token[++i]) {
+				if((fd1=open(token[i], O_CREAT | O_WRONLY | O_APPEND, S_IRWXU | S_IRGRP | S_IROTH))!=0) {
+					dup2(fd1, 1);
+					close(fd1);
+				} else if(fd1<0) {
+					perror(token[i]);
+					exit(1);
+				}
+			}
+		}
+		
+		if(direction==0)
+			commande[j++]=token[i];
+		
+		i++;
+	}
+	
+	commande[j]=NULL;
 }
