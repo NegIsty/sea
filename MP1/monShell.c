@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #define MAXCOMMANDE 4096
 
@@ -13,7 +14,8 @@ void saisieCommande(char*);
 void corrigeCommande(char*);
 void traitement(char*);
 void executeCommande(char**);
-void diviseCommande(char**, int, char**);
+int diviseCommande(char**, int*, char**);
+int executeAvecPipe(int, int, char**);
 
 int main() {
 	char commande[4096];
@@ -118,79 +120,151 @@ void traitement(char* commande) {
 
 /*Gère l'exécution des commandes autres que exit et cd*/
 void executeCommande(char** token) {
-	int fils, i;
+	int fils, in;
+	int info[2];
+	//info[0] : indice de parcours de token
+	//info[1] : 0 si pas de pipe, 1 si pipe
+	int fd[2];
 	int stdOut=dup(1), stdIn=dup(0);
 	char *commande[256];
 	
-	i=0;
+	info[0]=0;
+	in=0;
 	
-	diviseCommande(token, i, commande);
+	do {
+		info[1]=0;
+		
+		/*N'exécute pas la commande si une redirection est incorrecte*/
+		if(!diviseCommande(token, info, commande)){
+			break;
+		}
+		
+		/*Exécution des commandes jusqu'à l'avant dernière*/
+		else if(info[1]) {
+			pipe(fd);
+			if(!executeAvecPipe(in, fd[1], commande))
+				break;
+			close(fd[1]);
+			in=fd[0];
+		}
+		
+		/*Exécution de la dernière commande*/
+		else {
+			if(in!=0)
+				dup2(in, 0);
+			
+			/*Crée un fils qui exécute la commande*/
+			if((fils=fork())==0) {
+				execvp(commande[0], commande);
+				perror(commande[0]);
+				break;
+			} else if(fils==-1) {
+				perror("fork");
+				break;
+			}
+			waitpid(fils, NULL, 0);
+		}
+	} while(token[info[0]-1]);
 	
-	/*Crée un fils qui exécute la commande*/
-	if((fils=fork())==0) {
-		execvp(commande[0], commande);
-		perror(commande[0]);
-		exit(1);
-	} else if(fils==-1)
-		perror("fork");
-	waitpid(fils, NULL, 0);
-	
+	/*Rétablit les entrées et sorties standard*/
 	dup2(stdIn, 0);
 	dup2(stdOut, 1);
 }
 
-/*Sépare la commande à donner à execvp et établit les redirections*/
-void diviseCommande(char** token, int i, char** commande) {
-	int direction, fd0, fd1, j;
+/*Sépare la commande à donner à execvp et établit les redirections fichier*/
+int diviseCommande(char** token, int *info, char** commande) {
+	int direction, fd0, fd1, i, j;
 	
+	i=info[0];
 	direction=0;
 	j=0;
 	
-	while(token[i]) {
+	while(token[i] && strcmp(token[i], "|")) {
 		/*Gère les redirections*/
 		if(!(strcmp(token[i], "<"))) {
 			direction=1;
 			
-			if(token[++i]) {
-				if((fd0=open(token[i], O_RDONLY))!=0) {
+			if(token[++i] && strcmp(token[i], "|")) {
+				if((fd0=open(token[i], O_RDONLY))>0) {
 					dup2(fd0, 0);
 					close(fd0);
 				} else if(fd0<0) {
 					perror(token[i]);
-					exit(1);
+					return 0;
 				}
+			} else {
+				printf("< doit être suivie du nom du fichier source\n");
+				return 0;
 			}
 		} else if(!(strcmp(token[i], ">"))) {
-			direction=1;
+			direction=2;
 			
-			if(token[++i]) {
-				if((fd1=open(token[i], O_CREAT | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH))!=0) {
+			if(token[++i] && strcmp(token[i], "|")) {
+				if((fd1=open(token[i], O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU | S_IRGRP | S_IROTH))>0) {
 					dup2(fd1, 1);
 					close(fd1);
 				} else if(fd1<0) {
 					perror(token[i]);
-					exit(1);
+					return 0;
 				}
+			} else {
+				printf("> doit être suivie du nom du fichier cible\n");
+				return 0;
 			}
 		} else if(!(strcmp(token[i], "2>"))) {
-			direction=1;
+			direction=2;
 			
-			if(token[++i]) {
-				if((fd1=open(token[i], O_CREAT | O_WRONLY | O_APPEND, S_IRWXU | S_IRGRP | S_IROTH))!=0) {
+			if(token[++i] && strcmp(token[i], "|")) {
+				if((fd1=open(token[i], O_CREAT | O_WRONLY | O_APPEND, S_IRWXU | S_IRGRP | S_IROTH))>0) {
 					dup2(fd1, 1);
 					close(fd1);
 				} else if(fd1<0) {
 					perror(token[i]);
-					exit(1);
+					return 0;
 				}
+			} else {
+				printf("2> doit être suivie du nom du fichier cible\n");
+				return 0;
 			}
 		}
 		
+		/*Complète la commande à donner à execvp*/
 		if(direction==0)
 			commande[j++]=token[i];
 		
 		i++;
+		
+		/*Gère les pipes*/
+		if(token[i] && direction!=2 && !strcmp(token[i], "|"))
+			info[1]=1;
 	}
 	
 	commande[j]=NULL;
+	
+	info[0]=++i;
+}
+
+/*Gère l'exécution des commandes suivies d'un pipe
+Inspiré de stackoverflow : http://stackoverflow.com/questions/8082932/connecting-n-commands-with-pipes-in-a-shell*/
+int executeAvecPipe(int in, int out, char** commande) {
+	int fils;
+	
+	if((fils=fork())==0) {
+		if(in!=0) {
+			dup2(in, 0);
+			close(in);
+		}
+		
+		if(out!=1) {
+			dup2(out, 1);
+			close(out);
+		}
+		
+		execvp(commande[0], commande);
+		perror(commande[0]);
+		return 0;
+	} else if(fils==-1) {
+		perror("fork");
+		return 0;
+	}
 }
