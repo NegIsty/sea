@@ -162,6 +162,11 @@ void executeCommande(char** token) {
 				perror("fork");
 				break;
 			}
+			
+			/*Lance la commande en tâche de fond si l'opérateur & termine la dernière commande*/
+			if(token[info[0]-1] && !strcmp(token[info[0]-1], "&"))
+				break;
+			
 			waitpid(fils, NULL, 0);
 		}
 	} while(token[info[0]-1]);
@@ -177,14 +182,20 @@ int diviseCommande(char** token, int *info, char** commande) {
 	
 	i=info[0];
 	direction=0;
+	//0 si pas de redirection
+	//1 si redirection de l'entrée standard
+	//2 si redirection de la sortie standard
 	j=0;
 	
-	while(token[i] && strcmp(token[i], "|")) {
-		/*Gère les redirections*/
+	/*Parcours les tokens tant qu'il y en a et qu'ils sont différents de | et &*/
+	while(token[i] && strcmp(token[i], "|") && strcmp(token[i], "&")) {
+		
+		/*Gère la redirection <*/
 		if(!(strcmp(token[i], "<"))) {
-			direction=1;
+			if(direction!=2)
+				direction=1;
 			
-			if(token[++i] && strcmp(token[i], "|")) {
+			if(token[++i] && strcmp(token[i], "|") && strcmp(token[i], "&")) {
 				if((fd0=open(token[i], O_RDONLY))>0) {
 					dup2(fd0, 0);
 					close(fd0);
@@ -196,10 +207,12 @@ int diviseCommande(char** token, int *info, char** commande) {
 				printf("< doit être suivie du nom du fichier source\n");
 				return 0;
 			}
+			
+		/*Gère la redirection >*/
 		} else if(!(strcmp(token[i], ">"))) {
 			direction=2;
 			
-			if(token[++i] && strcmp(token[i], "|")) {
+			if(token[++i] && strcmp(token[i], "|") && strcmp(token[i], "&")) {
 				if((fd1=open(token[i], O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU | S_IRGRP | S_IROTH))>0) {
 					dup2(fd1, 1);
 					close(fd1);
@@ -211,10 +224,12 @@ int diviseCommande(char** token, int *info, char** commande) {
 				printf("> doit être suivie du nom du fichier cible\n");
 				return 0;
 			}
+			
+		/*Gère la redirection 2>*/
 		} else if(!(strcmp(token[i], "2>"))) {
 			direction=2;
 			
-			if(token[++i] && strcmp(token[i], "|")) {
+			if(token[++i] && strcmp(token[i], "|") && strcmp(token[i], "&")) {
 				if((fd1=open(token[i], O_CREAT | O_WRONLY | O_APPEND, S_IRWXU | S_IRGRP | S_IROTH))>0) {
 					dup2(fd1, 1);
 					close(fd1);
@@ -234,7 +249,7 @@ int diviseCommande(char** token, int *info, char** commande) {
 		
 		i++;
 		
-		/*Gère les pipes*/
+		/*Indique la présence d'un pipe si la sortie standard n'est pas déjà redirigée*/
 		if(token[i] && direction!=2 && !strcmp(token[i], "|"))
 			info[1]=1;
 	}
