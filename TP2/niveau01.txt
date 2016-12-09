@@ -1,0 +1,14 @@
+1.
+La chaine secret est stockée dans la section .data.
+
+---
+
+2.
+Le contenu de cette chaine est "l33th4x0r".
+Pour le trouver, j'ai exécuté la commande "objdump -s tp2-binaires/niveau1" et cherché ce qui ressemblait à un mot de passe.
+
+---
+
+3.
+./tp2-binaires/niveau1 l33th4x0r
+You Win!
