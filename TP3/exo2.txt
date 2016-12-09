@@ -1,0 +1,2 @@
+En augmentant le nombre de threads créés, il arrive que le résultat final du compteur ne soit pas juste.
+Cela arrive si 2 threads chargent la même valeur du compteur. Le résultat de leur incrémentation est donc le même et ils stockent la même nouvelle valeur. Le total est donc réduit de 1.
