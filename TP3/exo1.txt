@@ -1,0 +1,3 @@
+En exécutant le programme plusieurs fois, on constate que les messages de threads ne sont pas toujours affichés dans le même ordre.
+
+Sans le pthread_join, une partie des messages ne sont pas affichés et ceux qui sont affichés ne le sont pas forcément correctement.

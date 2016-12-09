@@ -1,0 +1,1 @@
+Avec ou sans l'usage de mutex, je n'observe pas de différence notable du temps d'exécution.
