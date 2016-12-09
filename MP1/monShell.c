@@ -125,7 +125,7 @@ void executeCommande(char** token) {
 	//info[0] : indice de parcours de token
 	//info[1] : 0 si pas de pipe, 1 si pipe, 2 si redirection de la sortie standard et pipe
 	int fd[2];
-	int stdOut=dup(1), stdIn=dup(0);
+	int stdOut=dup(1), stdIn=dup(0), stdErr=dup(2);
 	char *commande[256];
 	
 	info[0]=0;
@@ -146,7 +146,7 @@ void executeCommande(char** token) {
 			if((fils=fork())==0) {
 				execvp(commande[0], commande);
 				perror(commande[0]);
-				break;
+				exit(1);
 			} else if(fils==-1) {
 				perror("fork");
 				break;
@@ -179,7 +179,7 @@ void executeCommande(char** token) {
 			if((fils=fork())==0) {
 				execvp(commande[0], commande);
 				perror(commande[0]);
-				break;
+				exit(1);
 			} else if(fils==-1) {
 				perror("fork");
 				break;
@@ -191,6 +191,9 @@ void executeCommande(char** token) {
 			
 			waitpid(fils, NULL, 0);
 		}
+		
+		/*Rétablit la sortie d'erreur*/
+		dup2(stdErr, 2);
 	} while(token[info[0]-1]);
 	
 	/*Rétablit les entrées et sorties standard*/
@@ -200,12 +203,12 @@ void executeCommande(char** token) {
 
 /*Sépare la commande à donner à execvp et établit les redirections fichier*/
 int diviseCommande(char** token, int *info, char** commande) {
-	int direction, fd0, fd1, i, j;
+	int direction, fd0, fd1, fd2, i, j;
 	
 	i=info[0];
 	direction=0;
 	//0 si pas de redirection
-	//1 si redirection de l'entrée standard
+	//1 si redirection de l'entrée standard ou de la sortie d'erreur
 	//2 si redirection de la sortie standard
 	j=0;
 	
@@ -227,7 +230,7 @@ int diviseCommande(char** token, int *info, char** commande) {
 				}
 			} else {
 				printf("< doit être suivie du nom du fichier source\n");
-				return 0;
+				return 1;
 			}
 			
 		/*Gère la redirection >*/
@@ -244,11 +247,11 @@ int diviseCommande(char** token, int *info, char** commande) {
 				}
 			} else {
 				printf("> doit être suivie du nom du fichier cible\n");
-				return 0;
+				return 1;
 			}
 			
-		/*Gère la redirection 2>*/
-		} else if(!(strcmp(token[i], "2>"))) {
+		/*Gère la redirection >>*/
+		} else if(!(strcmp(token[i], ">>"))) {
 			direction=2;
 			
 			if(token[++i] && strcmp(token[i], "|") && strcmp(token[i], "&")) {
@@ -260,8 +263,42 @@ int diviseCommande(char** token, int *info, char** commande) {
 					return 0;
 				}
 			} else {
+				printf(">> doit être suivie du nom du fichier cible\n");
+				return 1;
+			}
+			
+		/*Gère la redirection 2>*/
+		} else if(!(strcmp(token[i], "2>"))) {
+			direction=1;
+			
+			if(token[++i] && strcmp(token[i], "|") && strcmp(token[i], "&")) {
+				if((fd2=open(token[i], O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU | S_IRGRP | S_IROTH))>0) {
+					dup2(fd2, 2);
+					close(fd2);
+				} else if(fd2<0) {
+					perror(token[i]);
+					return 0;
+				}
+			} else {
 				printf("2> doit être suivie du nom du fichier cible\n");
-				return 0;
+				return 1;
+			}
+			
+		/*Gère la redirection 2>>*/
+		} else if(!(strcmp(token[i], "2>>"))) {
+			direction=1;
+			
+			if(token[++i] && strcmp(token[i], "|") && strcmp(token[i], "&")) {
+				if((fd2=open(token[i], O_CREAT | O_WRONLY | O_APPEND, S_IRWXU | S_IRGRP | S_IROTH))>0) {
+					dup2(fd2, 2);
+					close(fd2);
+				} else if(fd2<0) {
+					perror(token[i]);
+					return 0;
+				}
+			} else {
+				printf("2>> doit être suivie du nom du fichier cible\n");
+				return 1;
 			}
 		}
 		
@@ -303,9 +340,9 @@ int executeAvecPipe(int in, int out, char** commande) {
 		
 		execvp(commande[0], commande);
 		perror(commande[0]);
-		return 0;
+		exit(1);
 	} else if(fils==-1) {
 		perror("fork");
-		return 0;
+		return 1;
 	}
 }
