@@ -123,7 +123,7 @@ void executeCommande(char** token) {
 	int fils, in;
 	int info[2];
 	//info[0] : indice de parcours de token
-	//info[1] : 0 si pas de pipe, 1 si pipe
+	//info[1] : 0 si pas de pipe, 1 si pipe, 2 si redirection de la sortie standard et pipe
 	int fd[2];
 	int stdOut=dup(1), stdIn=dup(0);
 	char *commande[256];
@@ -139,11 +139,33 @@ void executeCommande(char** token) {
 			break;
 		}
 		
+		/*Exécution des commandes en cas de redirection de la sortie standard et pipe*/
+		else if(info[1]==2) {
+			
+			/*Crée un fils qui exécute la commande*/
+			if((fils=fork())==0) {
+				execvp(commande[0], commande);
+				perror(commande[0]);
+				break;
+			} else if(fils==-1) {
+				perror("fork");
+				break;
+			}
+			
+			/*Rétablit les entrées et sorties standard*/
+			dup2(stdIn, 0);
+			dup2(stdOut, 1);
+			
+			in=0;
+		}
+		
 		/*Exécution des commandes jusqu'à l'avant dernière*/
 		else if(info[1]) {
 			pipe(fd);
+			
 			if(!executeAvecPipe(in, fd[1], commande))
 				break;
+			
 			close(fd[1]);
 			in=fd[0];
 		}
@@ -252,6 +274,10 @@ int diviseCommande(char** token, int *info, char** commande) {
 		/*Indique la présence d'un pipe si la sortie standard n'est pas déjà redirigée*/
 		if(token[i] && direction!=2 && !strcmp(token[i], "|"))
 			info[1]=1;
+		
+		/*Indique la présence d'un pipe si la sortie standard est redirigée*/
+		if(token[i] && direction==2 && !strcmp(token[i], "|"))
+			info[1]=2;
 	}
 	
 	commande[j]=NULL;
