@@ -135,7 +135,7 @@ void executeCommande(char** token) {
 		info[1]=0;
 		
 		/*N'exécute pas la commande si une redirection est incorrecte*/
-		if(!diviseCommande(token, info, commande)){
+		if(diviseCommande(token, info, commande)){
 			break;
 		}
 		
@@ -226,10 +226,10 @@ int diviseCommande(char** token, int *info, char** commande) {
 					close(fd0);
 				} else if(fd0<0) {
 					perror(token[i]);
-					return 0;
+					return 1;
 				}
 			} else {
-				printf("< doit être suivie du nom du fichier source\n");
+				fprintf(stderr, "monShell: syntax error near unexpected token `newline'\n");
 				return 1;
 			}
 			
@@ -243,10 +243,10 @@ int diviseCommande(char** token, int *info, char** commande) {
 					close(fd1);
 				} else if(fd1<0) {
 					perror(token[i]);
-					return 0;
+					return 1;
 				}
 			} else {
-				printf("> doit être suivie du nom du fichier cible\n");
+				fprintf(stderr, "monShell: syntax error near unexpected token `newline'\n");
 				return 1;
 			}
 			
@@ -260,10 +260,10 @@ int diviseCommande(char** token, int *info, char** commande) {
 					close(fd1);
 				} else if(fd1<0) {
 					perror(token[i]);
-					return 0;
+					return 1;
 				}
 			} else {
-				printf(">> doit être suivie du nom du fichier cible\n");
+				fprintf(stderr, "monShell: syntax error near unexpected token `newline'\n");
 				return 1;
 			}
 			
@@ -277,10 +277,10 @@ int diviseCommande(char** token, int *info, char** commande) {
 					close(fd2);
 				} else if(fd2<0) {
 					perror(token[i]);
-					return 0;
+					return 1;
 				}
 			} else {
-				printf("2> doit être suivie du nom du fichier cible\n");
+				fprintf(stderr, "monShell: syntax error near unexpected token `newline'\n");
 				return 1;
 			}
 			
@@ -294,10 +294,10 @@ int diviseCommande(char** token, int *info, char** commande) {
 					close(fd2);
 				} else if(fd2<0) {
 					perror(token[i]);
-					return 0;
+					return 1;
 				}
 			} else {
-				printf("2>> doit être suivie du nom du fichier cible\n");
+				fprintf(stderr, "monShell: syntax error near unexpected token `newline'\n");
 				return 1;
 			}
 		}
@@ -320,6 +320,8 @@ int diviseCommande(char** token, int *info, char** commande) {
 	commande[j]=NULL;
 	
 	info[0]=++i;
+	
+	return 0;
 }
 
 /*Gère l'exécution des commandes suivies d'un pipe
