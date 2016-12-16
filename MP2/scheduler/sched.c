@@ -64,8 +64,15 @@ tproc * rr(tlist * procs, tlist * ready, int * delta) {
 
 /* --Scheduler sjf-- */
 tproc * sjf(tlist * procs, tlist * ready, int * delta) {
-    /* FIXME: Random scheduler, replace by appropriate code */
-    return randomscheduler(procs, ready, delta);
+    tnode * p = ready->first;
+    tproc * ptmp = p->proc;
+    while(p->next != NULL) {
+    	p = p->next;
+    	if(p->proc->length < ptmp->length)
+    		ptmp = p->proc;
+    }
+    *delta = p->proc->remaining;
+    return ptmp;
 }
 /* --Scheduler sjf-- */
 
