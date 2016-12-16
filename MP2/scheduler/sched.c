@@ -42,8 +42,9 @@ tproc * randomscheduler(tlist * procs, tlist * ready, int * delta) {
 
 /* --Scheduler fcfs-- */
 tproc * fcfs(tlist * procs, tlist * ready, int * delta) {
-    /* FIXME: Random scheduler, replace by appropriate code */
-    return randomscheduler(procs, ready, delta);
+    tnode * p = ready->first;
+    *delta = p->proc->remaining;
+    return p->proc;
 }
 /* --Scheduler fcfs-- */
 
