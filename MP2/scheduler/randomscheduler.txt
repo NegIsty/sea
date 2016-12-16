@@ -1,0 +1,23 @@
+tproc * randomscheduler(tlist * procs, tlist * ready, int * delta) {
+    int length = len(ready);
+    int selected = rand()%length;
+    tnode * p = ready->first;
+    for (int i=0; i < selected; i++) {
+        p = p->next;
+    }
+    *delta = rand()%p->proc->remaining + 1;
+    return p->proc;
+}
+
+Entrées :
+- procs la liste des processus non prêts
+- ready la liste des processus prêts
+- delta le temps pendant lequel le processus va utiliser le processeur
+
+La fonction randomscheduler :
+- Stocke dans length le nombre de processus ready
+- Stocke dans selected un entier aléatoire entre 0 et length
+- Stocke dans p le premier élément de la liste des processus ready
+- Stocke dans p->next le processus suivant determiné par selected
+- Définit pour delta une valeur aléatoire entre 1 et le temps restant au processus choisi
+- Retourne le processus à exécuter
