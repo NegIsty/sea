@@ -71,7 +71,7 @@ tproc * sjf(tlist * procs, tlist * ready, int * delta) {
     	if(p->proc->length < ptmp->length)
     		ptmp = p->proc;
     }
-    *delta = p->proc->remaining;
+    *delta = ptmp->remaining;
     return ptmp;
 }
 /* --Scheduler sjf-- */
