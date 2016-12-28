@@ -134,6 +134,11 @@ void simulate(int max_time) {
 		    
             /* Call the scheduler */
             tproc * proc = scheduler(&procs, &ready, &delta);
+            
+            /* If it is the first execution of the process, 
+             * save the response time */
+            if (proc->length == proc->remaining)
+            	stats.response += time-proc->activation;
 
             /* Ensure the scheduler has advanced at least one unit of time */
             assert(delta > 0);
@@ -148,7 +153,7 @@ void simulate(int max_time) {
             proc->remaining-=delta;
  
             /* If the process remaining time is less zero or less, 
-             * save the completion time and delete it */ 
+             * save the completion and the waiting time, and delete it */ 
             if (proc->remaining <= 0) {
             	stats.completion += time-proc->activation;
             	stats.waiting += time-proc->activation-proc->length;
