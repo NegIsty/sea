@@ -29,67 +29,67 @@
 
 /* --Scheduler random--*/
 tproc * randomscheduler(tlist * procs, tlist * ready, int * delta) {
-    int length = len(ready);
-    int selected = rand()%length;
-    tnode * p = ready->first;
-    for (int i=0; i < selected; i++) {
-        p = p->next;
-    }
-    *delta = rand()%p->proc->remaining + 1;
-    return p->proc;
+	int length = len(ready);
+	int selected = rand()%length;
+	tnode * p = ready->first;
+	for (int i=0; i < selected; i++) {
+		p = p->next;
+	}
+	*delta = rand()%p->proc->remaining + 1;
+	return p->proc;
 }
 /* --Scheduler random--*/
 
 /* --Scheduler fcfs-- */
 tproc * fcfs(tlist * procs, tlist * ready, int * delta) {
-    tnode * p = ready->first;
-    *delta = p->proc->remaining;
-    return p->proc;
+	tnode * p = ready->first;
+	*delta = p->proc->remaining;
+	return p->proc;
 }
 /* --Scheduler fcfs-- */
 
 /* --Scheduler rr-- */
 tproc * rr(tlist * procs, tlist * ready, int * delta) {
-    tnode * p = ready->first;
-    tproc * ptmp = p->proc;
-    del(ready, p->proc);
-    int q = 1;
-    if(ptmp->remaining < q)
-    	q = ptmp->remaining;
-    *delta = q;
-    add(procs, ptmp);
-    return ptmp;
+	tnode * p = ready->first;
+	tproc * ptmp = p->proc;
+	del(ready, p->proc);
+	int q = 1;
+	if(ptmp->remaining < q)
+		q = ptmp->remaining;
+	*delta = q;
+	add(procs, ptmp);
+	return ptmp;
 }
 /* --Scheduler rr-- */
 
 /* --Scheduler sjf-- */
 tproc * sjf(tlist * procs, tlist * ready, int * delta) {
-    tnode * p = ready->first;
-    tproc * ptmp = p->proc;
-    while(p->next != NULL) {
-    	p = p->next;
-    	if(p->proc->length < ptmp->length)
-    		ptmp = p->proc;
-    }
-    *delta = ptmp->remaining;
-    return ptmp;
+	tnode * p = ready->first;
+	tproc * ptmp = p->proc;
+	while(p->next != NULL) {
+		p = p->next;
+		if(p->proc->length < ptmp->length)
+			ptmp = p->proc;
+	}
+	*delta = ptmp->remaining;
+	return ptmp;
 }
 /* --Scheduler sjf-- */
 
 /* --Scheduler srtf-- */
 tproc * srtf(tlist * procs, tlist * ready, int * delta) {
-    tnode * p = ready->first;
-    tproc * ptmp = p->proc;
-    int q = 1;
-    while(p->next != NULL) {
-    	p = p->next;
-    	if(p->proc->remaining < ptmp->remaining)
-    		ptmp = p->proc;
-    }
-    if(ptmp->remaining < q)
-    	q = ptmp->remaining;
-    *delta = q;
-    return ptmp;
+	tnode * p = ready->first;
+	tproc * ptmp = p->proc;
+	int q = 1;
+	while(p->next != NULL) {
+		p = p->next;
+		if(p->proc->remaining < ptmp->remaining)
+			ptmp = p->proc;
+	}
+	if(ptmp->remaining < q)
+		q = ptmp->remaining;
+	*delta = q;
+	return ptmp;
 }
 /* --Scheduler srtf-- */
 
@@ -131,6 +131,7 @@ void simulate(int max_time) {
         if (ready.first != NULL) {
 
             int delta = 0;
+		    
             /* Call the scheduler */
             tproc * proc = scheduler(&procs, &ready, &delta);
 
@@ -147,12 +148,15 @@ void simulate(int max_time) {
             proc->remaining-=delta;
  
             /* If the process remaining time is less zero or less, 
-             * delete it */ 
+             * save the completion time and delete it */ 
             if (proc->remaining <= 0) {
+            	stats.completion += time-proc->activation;
+            	
                 del(&ready, proc);
                 del(&procs, proc);
             }
-        } 
+        }
+        
         /* If no process is ready, just advance the simulation timer */
         else {
             time += 1;
