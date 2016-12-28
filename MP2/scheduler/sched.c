@@ -151,6 +151,7 @@ void simulate(int max_time) {
              * save the completion time and delete it */ 
             if (proc->remaining <= 0) {
             	stats.completion += time-proc->activation;
+            	stats.waiting += time-proc->activation-proc->length;
             	
                 del(&ready, proc);
                 del(&procs, proc);
