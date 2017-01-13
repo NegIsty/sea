@@ -106,8 +106,8 @@ void traitement(char* commande) {
 	
 	/*Commande saisie : cd*/
 	else if(!strcmp(token[0], "cd")) {
-		tmp=strcat(strcat(path, "/"), token[1]);
-		chdir(tmp);
+		//tmp=strcat(strcat(path, "/"), token[1]);
+		chdir(token[1]);
 	}
 	
 	/*Autre commande*/
