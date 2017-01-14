@@ -158,6 +158,15 @@ void simulate(int max_time) {
             	stats.completion += time-proc->activation;
             	stats.waiting += time-proc->activation-proc->length;
             	
+            	if (proc->period != 0) {
+            		tproc * proctmp = proc;
+            		
+            		proctmp->activation += proctmp->period;
+            		proctmp->remaining = proctmp->length;
+            		
+                	add(&procs, proctmp);
+            	}
+            	
                 del(&ready, proc);
                 del(&procs, proc);
             }
