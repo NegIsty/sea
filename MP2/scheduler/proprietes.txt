@@ -1,0 +1,15 @@
+FCFS :
+
+On observe bien l'effet de convoi avec une augmentation du temps de réponse dès que la durée d'une tache est supérieure à 2 secondes. Il est ainsi très important sur la dernière tache (10 secondes, soit près de la moitié du temps de réponse total).
+
+---
+
+RR :
+
+Ici le temps de réponse est bien plus court qu'avec les autres ordonnanceurs, mais le temps d'attente et le temps de complétion sont plus importants.
+
+---
+
+SJF et SRTF :
+
+Le temps d'attente est, comme indiqué dans le cours, réduit par rapport au FCFS. De plus, on observe que SRTF donne un meilleur résultat que SJF pour l'ensemble des temps, mais principalement pour le temps de réponse qui l'est de près de 50%.
