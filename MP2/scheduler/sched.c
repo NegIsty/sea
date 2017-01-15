@@ -201,9 +201,9 @@ void simulate(int max_time) {
             		proctmp->activation += proctmp->period;
             		proctmp->remaining = proctmp->length;
             		
-            		/* If the new activation time is less than max_time,
+            		/* If the new activation time is less or equal max_time,
             		 * re-add the process to procs and output new task arrival */
-            		if (proctmp->activation < max_time) {
+            		if (proctmp->activation <= max_time) {
 		            	del(&ready, proc);
 		            	del(&procs, proc);
 		            	add(&procs, proctmp);
