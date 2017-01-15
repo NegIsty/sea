@@ -179,7 +179,10 @@ void simulate(int max_time) {
             assert(delta > 0);
 
             /* Output task execution */
-            printf("\\TaskExecution{%d}{%d}{%d}\n", proc->pid, time, time+delta);
+            if (proc->activation+proc->period > time)
+            	printf("\\TaskExecution{%d}{%d}{%d}\n", proc->pid, time, time+delta);
+            else
+            	printf("\\TaskExecution[color=red]{%d}{%d}{%d}\n", proc->pid, time, time+delta);
 
             /* Advance time by delta */
             time += delta;
