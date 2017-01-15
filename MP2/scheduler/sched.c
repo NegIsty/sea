@@ -95,7 +95,18 @@ tproc * srtf(tlist * procs, tlist * ready, int * delta) {
 
 /* --Scheduler edf-- */
 tproc * edf(tlist * procs, tlist * ready, int * delta) {
-	return randomscheduler(procs, ready, delta);
+	tnode * p = ready->first;
+	tproc * ptmp = p->proc;
+	int q = 1;
+	while(p->next != NULL) {
+		p = p->next;
+		if(p->proc->activation+p->proc->period < ptmp->activation+ptmp->period)
+			ptmp = p->proc;
+	}
+	if(ptmp->remaining < q)
+		q = ptmp->remaining;
+	*delta = q;
+	return ptmp;
 }
 /* --Scheduler edf-- */
 
