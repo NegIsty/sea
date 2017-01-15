@@ -93,6 +93,18 @@ tproc * srtf(tlist * procs, tlist * ready, int * delta) {
 }
 /* --Scheduler srtf-- */
 
+/* --Scheduler edf-- */
+tproc * edf(tlist * procs, tlist * ready, int * delta) {
+	return randomscheduler(procs, ready, delta);
+}
+/* --Scheduler edf-- */
+
+/* --Scheduler rm-- */
+tproc * rm(tlist * procs, tlist * ready, int * delta) {
+	return randomscheduler(procs, ready, delta);
+}
+/* --Scheduler rm-- */
+
 /* List of ready procs */
 tlist ready;
 
@@ -107,7 +119,7 @@ tstats stats = {0} ;
 
 /* display usage message */
 void usage() {
-    fail("usage: sched [fcfs, rr, sjf, srtf]\n");
+    fail("usage: sched [fcfs, rr, sjf, srtf, edf, rm]\n");
 }
 
 /* simulate a single core scheduler, from time 0 to `max_time` */
@@ -158,17 +170,31 @@ void simulate(int max_time) {
             	stats.completion += time-proc->activation;
             	stats.waiting += time-proc->activation-proc->length;
             	
+            	/* If the process perid exists,
+            	 * set the new activation time and reset the remaining time */
             	if (proc->period != 0) {
             		tproc * proctmp = proc;
             		
             		proctmp->activation += proctmp->period;
             		proctmp->remaining = proctmp->length;
             		
-                	add(&procs, proctmp);
+            		/* If the new activation time is less than 40,
+            		 * re-add the process to procs and output new task arrival */
+            		if (proctmp->activation < 40) {
+		            	del(&ready, proc);
+		            	del(&procs, proc);
+		            	add(&procs, proctmp);
+		            	
+		            	printf("\\TaskArrival{%d}{%d}\n", proctmp->pid, proctmp->activation);
+		            }
             	}
             	
-                del(&ready, proc);
-                del(&procs, proc);
+            	/* If the process perid doesn't exists,
+            	 * just delete the proc */
+            	else {            	
+		            del(&ready, proc);
+		            del(&procs, proc);
+                }
             }
         }
         
@@ -202,6 +228,12 @@ int main(int argc, char * argv[]) {
     }
     else if (strcmp(method, "srtf") == 0) {
         scheduler = srtf;
+    } 
+    else if (strcmp(method, "edf") == 0) {
+        scheduler = edf;
+    } 
+    else if (strcmp(method, "rm") == 0) {
+        scheduler = rm;
     } 
     else {
         usage();
