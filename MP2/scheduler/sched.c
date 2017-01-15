@@ -115,10 +115,9 @@ tproc * rm(tlist * procs, tlist * ready, int * delta) {
 	tnode * p = ready->first;
 	tproc * ptmp = p->proc;
 	int q = 1;
-	float priority = 1.0/ptmp->period;
 	while(p->next != NULL) {
 		p = p->next;
-		if(1.0/p->proc->period > priority)
+		if(p->proc->period < ptmp->period)
 			ptmp = p->proc;
 	}
 	if(ptmp->remaining < q)
