@@ -112,7 +112,19 @@ tproc * edf(tlist * procs, tlist * ready, int * delta) {
 
 /* --Scheduler rm-- */
 tproc * rm(tlist * procs, tlist * ready, int * delta) {
-	return randomscheduler(procs, ready, delta);
+	tnode * p = ready->first;
+	tproc * ptmp = p->proc;
+	int q = 1;
+	float priority = 1.0/ptmp->period;
+	while(p->next != NULL) {
+		p = p->next;
+		if(1.0/p->proc->period > priority)
+			ptmp = p->proc;
+	}
+	if(ptmp->remaining < q)
+		q = ptmp->remaining;
+	*delta = q;
+	return ptmp;
 }
 /* --Scheduler rm-- */
 
@@ -136,7 +148,7 @@ void usage() {
 /* simulate a single core scheduler, from time 0 to `max_time` */
 void simulate(int max_time) {
     int time=0;
-    while(time <= max_time) {
+    while(time < max_time) {
         /* Activate process */
         for (tnode * p = procs.first; p != NULL;) {
             tproc * proc = p->proc; 
@@ -189,9 +201,9 @@ void simulate(int max_time) {
             		proctmp->activation += proctmp->period;
             		proctmp->remaining = proctmp->length;
             		
-            		/* If the new activation time is less than 40,
+            		/* If the new activation time is less than max_time,
             		 * re-add the process to procs and output new task arrival */
-            		if (proctmp->activation < 40) {
+            		if (proctmp->activation < max_time) {
 		            	del(&ready, proc);
 		            	del(&procs, proc);
 		            	add(&procs, proctmp);
