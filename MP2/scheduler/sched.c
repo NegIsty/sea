@@ -178,7 +178,7 @@ void simulate(int max_time) {
             assert(delta > 0);
 
             /* Output task execution */
-            if (proc->activation+proc->period > time)
+            if (!proc->period || proc->activation+proc->period > time)
             	printf("\\TaskExecution{%d}{%d}{%d}\n", proc->pid, time, time+delta);
             else
             	printf("\\TaskExecution[color=red]{%d}{%d}{%d}\n", proc->pid, time, time+delta);
