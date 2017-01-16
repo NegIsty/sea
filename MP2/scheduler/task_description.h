@@ -47,12 +47,26 @@ tproc tasks[] = {
 /* Même résultat */
 
 /* Exemple Effet Domino */
-int max_time = 24;
+/*int max_time = 24;
 tproc tasks[] = {
      //pid  //activation  //length  //remaining  //period
     {1,     0,            2,        2,           5       },
     {2,     0,            2,        2,           6       },
     {3,     0,            2,        2,           7       },
     {4,     0,            2,        2,           8       },
-};
+};*/
 /* Même résultat pour EDF, mais pas pour RM */
+
+
+/* Question 22 */
+
+int max_time = 100;
+tproc tasks[] = {
+     //pid  //activation  //length  //remaining  //period
+    {1,     0,            1,        1,           5       },
+    {2,     0,            4,        4,           6       },
+    {3,     0,            1,        1,           9       },
+};
+/* On observe un cycle de 90 secondes sur lequel toutes les tâches
+ * sont exécutées dans les temps avec EDF, tandis qu'avec RM, la
+ * troisième tâche voit sa première exécution réalisée en retard */
