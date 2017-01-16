@@ -54,6 +54,8 @@ tproc * rr(tlist * procs, tlist * ready, int * delta) {
 	tproc * ptmp = p->proc;
 	del(ready, p->proc);
 	int q = 1;
+	/* If the process remaining time is less than q,
+	 * it becomes the new q */
 	if(ptmp->remaining < q)
 		q = ptmp->remaining;
 	*delta = q;
@@ -66,8 +68,11 @@ tproc * rr(tlist * procs, tlist * ready, int * delta) {
 tproc * sjf(tlist * procs, tlist * ready, int * delta) {
 	tnode * p = ready->first;
 	tproc * ptmp = p->proc;
+	/* Check if there is no better process to execute now */
 	while(p->next != NULL) {
 		p = p->next;
+		/* If the length of the new process is less than the one of
+		 * the actual process, it becomes the new process to return */
 		if(p->proc->length < ptmp->length)
 			ptmp = p->proc;
 	}
@@ -81,11 +86,16 @@ tproc * srtf(tlist * procs, tlist * ready, int * delta) {
 	tnode * p = ready->first;
 	tproc * ptmp = p->proc;
 	int q = 1;
+	/* Check if there is no better process to execute now */
 	while(p->next != NULL) {
 		p = p->next;
+		/* If the remaining of the new process is less than the one of
+		 * the actual process, it becomes the new process to return */
 		if(p->proc->remaining < ptmp->remaining)
 			ptmp = p->proc;
 	}
+	/* If the process remaining time is less than q,
+	 * it becomes the new q */
 	if(ptmp->remaining < q)
 		q = ptmp->remaining;
 	*delta = q;
@@ -98,11 +108,16 @@ tproc * edf(tlist * procs, tlist * ready, int * delta) {
 	tnode * p = ready->first;
 	tproc * ptmp = p->proc;
 	int q = 1;
+	/* Check if there is no better process to execute now */
 	while(p->next != NULL) {
 		p = p->next;
+		/* If the deadline of the new process is less than the one of
+		 * the actual process, it becomes the new process to return */
 		if(p->proc->activation+p->proc->period < ptmp->activation+ptmp->period)
 			ptmp = p->proc;
 	}
+	/* If the process remaining time is less than q,
+	 * it becomes the new q */
 	if(ptmp->remaining < q)
 		q = ptmp->remaining;
 	*delta = q;
@@ -115,11 +130,16 @@ tproc * rm(tlist * procs, tlist * ready, int * delta) {
 	tnode * p = ready->first;
 	tproc * ptmp = p->proc;
 	int q = 1;
+	/* Check if there is no better process to execute now */
 	while(p->next != NULL) {
 		p = p->next;
+		/* If the period of the new process is less than the one of
+		 * the actual process, it becomes the new process to return */
 		if(p->proc->period < ptmp->period)
 			ptmp = p->proc;
 	}
+	/* If the process remaining time is less than q,
+	 * it becomes the new q */
 	if(ptmp->remaining < q)
 		q = ptmp->remaining;
 	*delta = q;
@@ -195,7 +215,7 @@ void simulate(int max_time) {
             	stats.completion += time-proc->activation;
             	stats.waiting += time-proc->activation-proc->length;
             	
-            	/* If the process perid exists,
+            	/* If the process period exists,
             	 * set the new activation time and reset the remaining time */
             	if (proc->period != 0) {
             		tproc * proctmp = proc;
