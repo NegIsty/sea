@@ -55,7 +55,9 @@ tproc tasks[] = {
     {3,     0,            2,        2,           7       },
     {4,     0,            2,        2,           8       },
 };*/
-/* Même résultat pour EDF, mais pas pour RM */
+/* Même résultat pour EDF, mais pas pour RM pour lequel la toute
+ * fin divers, je pense dû à la façon dont je gère les tâches
+ * périodiques */
 
 
 /* Question 22 */
